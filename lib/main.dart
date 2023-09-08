@@ -91,32 +91,35 @@ class SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-          child: Padding(
-        padding: const EdgeInsets.only(left: 280.0),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/welcome.png',
-              width: 150,
-              height: 200,
-            ),
-            SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Text(
-                  ' Quiz Time - Prove Your Smarts!',
-                  style: TextStyle(
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 200.0),
+          child: Center(
+            child: Column(
+              children: [
+                Image.asset(
+                  'assets/welcome.png',
+                  width: 150,
+                  height: 200,
+                ),
+                SlideTransition(
+                  position: _slideAnimation,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: const Text(
+                      ' Quiz Time - Prove Your Smarts!',
+                      style: TextStyle(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }
@@ -150,6 +153,7 @@ class QuizPageState extends State<QuizPage> {
   Timer? questionTimer;
   int remainingTime = 1000;//time for each question in milliseconds
   int remSecond = 10;
+  int unanswered=0;
 
   @override
   void initState() {
@@ -163,8 +167,9 @@ class QuizPageState extends State<QuizPage> {
       setState(() {
         if (remainingTime <= 0) {
           timer.cancel();
-          // Auto-select an option when time is up (you can customize this behavior)
-          selectOption(quizQuestions[currentQuestionIndex].options[0]);
+          if(selectedAnswers[currentQuestionIndex] == null)
+            unanswered++;
+          nextQuestion(context);
         } else {
           remainingTime -= 1;
           if (remainingTime % 100 == 0) remSecond--;
@@ -234,6 +239,7 @@ class QuizPageState extends State<QuizPage> {
             selectedAnswers: selectedAnswers,
             quizQuestions: quizQuestions,
             name: widget.name,
+            unanswered:unanswered,
           ),
         ),
       );
@@ -349,11 +355,13 @@ class QuizResult extends StatefulWidget {
   final Map<int, String> selectedAnswers;
   final List<QuizQuestion> quizQuestions;
   final String name;
+  final int unanswered;
 
   const QuizResult(
       {super.key, required this.selectedAnswers,
       required this.quizQuestions,
-      required this.name});
+      required this.name,
+      required this.unanswered});
 
   @override
   State<QuizResult> createState() => _QuizResultState();
@@ -414,6 +422,16 @@ class _QuizResultState extends State<QuizResult> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
+            Text(
+              'Unanswered : ${widget.unanswered}  ',
+              style: const TextStyle(
+                fontSize: 36,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
             const SizedBox(height: 20,),
             ElevatedButton(
               onPressed: () {
